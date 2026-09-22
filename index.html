@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codomax Capstone - Nafri | Expense Tracker + Store</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body{background:#f6f8fc;font-family: 'Segoe UI', sans-serif}
+.card{border:none;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+.header{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;padding:40px 0;border-radius:0 0 32px 32px}
+.stat{font-size:28px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="header text-center">
+<h1>💼 Python Capstone Project</h1>
+<p>Expense Tracker + Mini E-Commerce API | CDS_INT_202693138 | Nafri</p>
+<a href="/api/docs" class="btn btn-light btn-sm">API Docs</a>
+<a href="/api/health" class="btn btn-outline-light btn-sm">Health Check</a>
+</div>
+
+<div class="container my-4">
+<div class="row g-3">
+<div class="col-md-3"><div class="card p-3"><small>Total Spent</small><div class="stat" id="total">₹0</div></div></div>
+<div class="col-md-3"><div class="card p-3"><small>Transactions</small><div class="stat" id="count">0</div></div></div>
+<div class="col-md-3"><div class="card p-3"><small>Products</small><div class="stat" id="pcount">4</div></div></div>
+<div class="col-md-3"><div class="card p-3"><small>Orders</small><div class="stat" id="ocount">0</div></div></div>
+</div>
+
+<div class="row mt-4 g-4">
+<div class="col-md-6">
+<div class="card p-4">
+<h5>Add Expense</h5>
+<input id="title" class="form-control mb-2" placeholder="Title e.g. Lunch">
+<input id="amount" type="number" class="form-control mb-2" placeholder="Amount">
+<select id="category" class="form-control mb-2"><option>Food</option><option>Travel</option><option>Shopping</option><option>Office</option><option>Other</option></select>
+<input id="notes" class="form-control mb-2" placeholder="Notes">
+<button onclick="addExpense()" class="btn btn-primary w-100">Add Expense</button>
+</div>
+<div class="card p-4 mt-3">
+<h5>Recent Expenses</h5>
+<div id="expList"></div>
+</div>
+</div>
+
+<div class="col-md-6">
+<div class="card p-4">
+<h5>Products (E-Commerce Module)</h5>
+<div id="prodList"></div>
+</div>
+<div class="card p-4 mt-3">
+<h5>Place Order (Tests Stock Logic)</h5>
+<input id="prodId" class="form-control mb-2" placeholder="Product ID (1-4)">
+<input id="qty" type="number" class="form-control mb-2" placeholder="Quantity" value="1">
+<input id="cust" class="form-control mb-2" placeholder="Customer Name">
+<button onclick="placeOrder()" class="btn btn-success w-100">Place Order</button>
+<div id="orderMsg" class="mt-2"></div>
+</div>
+</div>
+</div>
+
+<div class="text-center my-4 text-muted">
+<small>Built with Flask • SQLite • Bootstrap • Logging • Exception Handling • Modular Structure • Deployed on Render</small><br>
+<small>GitHub: github.com/nafris565-cmyk/codomax-module-6-capstone | Codomax Digital Solutions</small>
+</div>
+</div>
+
+<script>
+async function loadAll(){
+ let e = await fetch('/api/expenses').then(r=>r.json());
+ let s = await fetch('/api/expenses/summary').then(r=>r.json());
+ let p = await fetch('/api/products').then(r=>r.json());
+ let o = await fetch('/api/orders').then(r=>r.json());
+ document.getElementById('total').innerText = '₹'+(s.grand_total||0);
+ document.getElementById('count').innerText = e.length;
+ document.getElementById('pcount').innerText = p.length;
+ document.getElementById('ocount').innerText = o.length;
+ document.getElementById('expList').innerHTML = e.slice(0,10).map(x=>`<div class='d-flex justify-content-between border-bottom py-2'><span>${x.title} <small class='text-muted'>${x.category}</small></span><b>₹${x.amount}</b></div>`).join('') || 'No expenses';
+ document.getElementById('prodList').innerHTML = p.map(x=>`<div class='d-flex justify-content-between border-bottom py-2'><span>#${x.id} ${x.name} <small>${x.category}</small></span><span>₹${x.price} | Stock:${x.stock}</span></div>`).join('');
+}
+async function addExpense(){
+ let body={title:title.value, amount:amount.value, category:category.value, notes:notes.value};
+ let r= await fetch('/api/expenses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+ if(r.ok){alert('Added!'); loadAll();} else alert('Error');
+}
+async function placeOrder(){
+ let body={product_id:prodId.value, quantity:qty.value, customer:cust.value};
+ let r= await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
+ document.getElementById('orderMsg').innerText = r.message || r.error;
+ loadAll();
+}
+loadAll();
+</script>
+</body>
+</html>
